@@ -18,10 +18,10 @@ type Pool struct {
 }
 
 // New creates a new connection pool.
-func New(network, address string) (*Pool, error) {
+func New(network, address string) *Pool {
 	p := &Pool{network: network, address: address}
 	p.SetMaxIdleConns(defaultMaxIdleConns)
-	return p, nil
+	return p
 }
 
 // Dial tries to stablish a new connection.
