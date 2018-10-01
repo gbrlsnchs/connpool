@@ -56,12 +56,12 @@ func (p *Pool) GetContext(ctx context.Context) (net.Conn, error) {
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	default:
-	}
-	select {
-	case conn := <-p.c:
-		return conn, nil
-	default:
-		return p.DialContext(ctx)
+		select {
+		case conn := <-p.c:
+			return conn, nil
+		default:
+			return p.DialContext(ctx)
+		}
 	}
 }
 
