@@ -14,7 +14,7 @@ type Pool struct {
 	maxOpenConns int
 	maxIdleConns int
 	c            chan net.Conn // conn pool
-	q            chan struct{} // open conns queue
+	q            queue         // open conns queue
 }
 
 // New creates a new connection pool.
@@ -71,7 +71,7 @@ func (p *Pool) SetMaxIdleConns(maxConns int) {
 	if p.maxOpenConns > 0 && p.maxIdleConns > p.maxOpenConns {
 		p.maxIdleConns = p.maxOpenConns
 	}
-	p.resetPool()
+	p.reset()
 }
 
 // SetMaxOpenConns limits the amount of open connections.
@@ -80,11 +80,11 @@ func (p *Pool) SetMaxOpenConns(maxConns int) {
 	if p.maxOpenConns > 0 && p.maxIdleConns > p.maxOpenConns {
 		p.maxIdleConns = p.maxOpenConns
 	}
-	p.resetPool()
-	p.resetQueue()
+	p.reset()
+	p.q.reset(p.maxOpenConns)
 }
 
-func (p *Pool) resetPool() {
+func (p *Pool) reset() {
 	// Reset channel only if size has changed.
 	if p.maxIdleConns != cap(p.c) {
 		if p.c != nil {
@@ -96,21 +96,6 @@ func (p *Pool) resetPool() {
 		}
 		// Don't reuse any connections.
 		p.c = nil
-	}
-}
-
-func (p *Pool) resetQueue() {
-	// Reset channel only if size has changed.
-	if p.maxOpenConns != cap(p.q) {
-		if p.q != nil {
-			close(p.q)
-		}
-		if p.maxOpenConns > 0 {
-			p.q = make(chan struct{}, p.maxOpenConns)
-			return
-		}
-		// A nil queue channel means open connections are limitless.
-		p.q = nil
 	}
 }
 
