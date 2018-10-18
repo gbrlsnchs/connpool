@@ -1,1 +1,1 @@
-module github.com/gbrlsnchs/cpool
+module github.com/gbrlsnchs/connpool

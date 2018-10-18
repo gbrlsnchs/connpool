@@ -1,8 +1,7 @@
-package cpool
+package connpool
 
 import "net"
 
-// Conn is a Redis connection.
 type conn struct {
 	net.Conn
 	p chan<- net.Conn
