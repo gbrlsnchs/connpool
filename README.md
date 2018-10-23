@@ -61,11 +61,13 @@ conn, err := p.Get()
 if err != nil {
 	// handle error
 }
+
+// use connection
+
 conn.Close() // gets stored in the pool if there is enough space, otherwise truly closes the connection
 
 fmt.Println(p.Cap())   // prints "100"
 fmt.Println(p.Len())   // prints "1"
-// use connection
 ```
 
 ## Contributing
