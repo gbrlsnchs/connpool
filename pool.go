@@ -9,12 +9,10 @@ const defaultMaxIdleConns = 2
 
 // Pool is a connection pool.
 type Pool struct {
-	network      string
-	address      string
-	maxOpenConns int
-	maxIdleConns int
-	c            chan net.Conn // conn pool
-	q            queue         // open conns queue
+	network string
+	address string
+	c       chan net.Conn // conn pool
+	q       chan struct{} // open conns queue
 }
 
 // New creates a new connection pool.
@@ -40,7 +38,7 @@ func (p *Pool) DialContext(ctx context.Context) (net.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &conn{Conn: c, p: p.c, q: p.q}, nil
+	return &conn{c, p.c, p.q}, nil
 }
 
 // Get retrieves a new connection if any is available,
@@ -66,36 +64,38 @@ func (p *Pool) GetContext(ctx context.Context) (net.Conn, error) {
 }
 
 // SetMaxIdleConns limits the amount of idle connections in the pool.
-func (p *Pool) SetMaxIdleConns(maxConns int) {
-	p.maxIdleConns = maxConns
-	if p.maxOpenConns > 0 && p.maxIdleConns > p.maxOpenConns {
-		p.maxIdleConns = p.maxOpenConns
+func (p *Pool) SetMaxIdleConns(n int) {
+	if maxOpenConns := cap(p.q); maxOpenConns > 0 && n > maxOpenConns {
+		n = maxOpenConns
 	}
-	p.reset()
-}
-
-// SetMaxOpenConns limits the amount of open connections.
-func (p *Pool) SetMaxOpenConns(maxConns int) {
-	p.maxOpenConns = maxConns
-	if p.maxOpenConns > 0 && p.maxIdleConns > p.maxOpenConns {
-		p.maxIdleConns = p.maxOpenConns
-	}
-	p.reset()
-	p.q.reset(p.maxOpenConns)
-}
-
-func (p *Pool) reset() {
-	// Reset channel only if size has changed.
-	if p.maxIdleConns != cap(p.c) {
+	if n != cap(p.c) {
 		if p.c != nil {
 			close(p.c)
 		}
-		if p.maxIdleConns > 0 {
-			p.c = make(chan net.Conn, p.maxIdleConns)
+		if n == 0 {
+			// Don't reuse any connections.
+			p.c = nil
 			return
 		}
-		// Don't reuse any connections.
-		p.c = nil
+		p.c = make(chan net.Conn, n)
+	}
+}
+
+// SetMaxOpenConns limits the amount of open connections.
+func (p *Pool) SetMaxOpenConns(n int) {
+	if n > 0 {
+		p.SetMaxIdleConns(n)
+	}
+	if n != cap(p.q) {
+		if p.q != nil {
+			close(p.q)
+		}
+		if n == 0 {
+			// A nil queue channel means open connections are limitless.
+			p.q = nil
+			return
+		}
+		p.q = make(chan struct{}, n)
 	}
 }
 
@@ -104,7 +104,7 @@ func (p *Pool) wait(ctx context.Context) error {
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
-		if p.maxOpenConns > 0 {
+		if cap(p.q) > 0 {
 			p.q <- struct{}{}
 		}
 		return nil
