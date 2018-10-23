@@ -22,12 +22,20 @@ func New(network, address string) *Pool {
 	return p
 }
 
-// Dial tries to stablish a new connection.
+// Cap returns the capacity of the pool,
+// which is the number of maximum idle connections.
+func (p *Pool) Cap() int {
+	return cap(p.c)
+}
+
+// Dial tries to stablish a new connection
+// while respecting the limit for open connections.
 func (p *Pool) Dial() (net.Conn, error) {
 	return p.DialContext(context.Background())
 }
 
-// DialContext tries to stablish a new connection before a context is canceled.
+// DialContext tries to stablish a new connection before a context is canceled
+// while respecting the limit for open connections.
 func (p *Pool) DialContext(ctx context.Context) (net.Conn, error) {
 	var err error
 	if err = p.wait(ctx); err != nil {
@@ -61,6 +69,11 @@ func (p *Pool) GetContext(ctx context.Context) (net.Conn, error) {
 			return p.DialContext(ctx)
 		}
 	}
+}
+
+// Len returns the number of idle connections.
+func (p *Pool) Len() int {
+	return len(p.c)
 }
 
 // SetMaxIdleConns limits the amount of idle connections in the pool.
