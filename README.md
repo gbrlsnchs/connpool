@@ -61,7 +61,7 @@ conn, err := p.Get()
 if err != nil {
 	// handle error
 }
-defer conn.Close()
+conn.Close() // if there is enough space in the pool, it goes back in order to be reused
 
 fmt.Println(p.Cap())   // prints "100"
 fmt.Println(p.Len())   // prints "1"
