@@ -1,10 +1,9 @@
 # connpool (connection pool for Golang)
 
-[![Build status](https://travis-ci.org/gbrlsnchs/connpool.svg?branch=master)](https://travis-ci.org/gbrlsnchs/connpool)
-[![Build status](https://ci.appveyor.com/api/projects/status/9lpy785hty5snjri/branch/master?svg=true)](https://ci.appveyor.com/project/gbrlsnchs/connpool/branch/master)
+[![Build Status](https://travis-ci.org/gbrlsnchs/connpool.svg?branch=master)](https://travis-ci.org/gbrlsnchs/connpool)
 [![Sourcegraph](https://sourcegraph.com/github.com/gbrlsnchs/connpool/-/badge.svg)](https://sourcegraph.com/github.com/gbrlsnchs/connpool?badge)
 [![GoDoc](https://godoc.org/github.com/gbrlsnchs/connpool?status.svg)](https://godoc.org/github.com/gbrlsnchs/connpool)
-[![Minimal version](https://img.shields.io/badge/minimal%20version-go1.10%2B-5272b4.svg)](https://golang.org/doc/go1.10)
+[![Minimal Version](https://img.shields.io/badge/minimal%20version-go1.10%2B-5272b4.svg)](https://golang.org/doc/go1.10)
 
 ## About
 This package is a connection pool that manages limits for open and idle connections.
